@@ -13,3 +13,4 @@ class Book(Base):
     is_published = Column(Boolean, index=True)
     description = Column(String, index=True)
     summary = Column(String, index=True)
+    booktype = Column(String, index=True)
