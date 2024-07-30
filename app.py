@@ -58,17 +58,18 @@ async def get_order(db: Session = Depends(get_db)):
     return db.query(models.OrderCoffee).all()
 
 @router_v1.post('/coffee/order')
-async def create_order(order_data: dict, response: Response, db: Session = Depends(get_db)):
-    # Validate input keys
-    required_keys = ["coffee_id", "quantity", "total"]
-    if not all(key in order_data for key in required_keys):
-        raise HTTPException(status_code=400, detail="Missing required fields")
+async def create_order(orders: list[dict], response: Response, db: Session = Depends(get_db)):
+    # Validate input structure
+    for order_data in orders:
+        required_keys = ["coffee_id", "quantity", "total"]
+        if not all(key in order_data for key in required_keys):
+            raise HTTPException(status_code=400, detail="Missing required fields")
 
-    # Validate field types
-    if not isinstance(order_data["coffee_id"], int) or \
-       not isinstance(order_data["quantity"], int) or \
-       not isinstance(order_data["total"], int):
-        raise HTTPException(status_code=400, detail="Invalid field types")
+        # Validate field types
+        if not isinstance(order_data["coffee_id"], int) or \
+           not isinstance(order_data["quantity"], int) or \
+           not isinstance(order_data["total"], int):
+            raise HTTPException(status_code=400, detail="Invalid field types")
 
     # Create a new order
     new_order = models.Order()
@@ -76,19 +77,21 @@ async def create_order(order_data: dict, response: Response, db: Session = Depen
     db.commit()
     db.refresh(new_order)
     
-    # Create a new order_coffee entry
-    new_order_coffee = models.OrderCoffee(
-        order_id=new_order.order_id,
-        coffee_id=order_data["coffee_id"],  # Use quotes for dictionary keys
-        quantity=order_data["quantity"],
-        total=order_data["total"],
-    )
+    # Create order_coffee entries
+    order_coffees = []
+    for order_data in orders:
+        new_order_coffee = models.OrderCoffee(
+            order_id=new_order.order_id,
+            coffee_id=order_data["coffee_id"],
+            quantity=order_data["quantity"],
+            total=order_data["total"],
+        )
+        db.add(new_order_coffee)
+        db.commit()
+        db.refresh(new_order_coffee)
+        order_coffees.append(new_order_coffee)
     
-    db.add(new_order_coffee)
-    db.commit()
-    db.refresh(new_order_coffee)
-    
-    return {"order": new_order, "order_coffee": new_order_coffee}
+    return {"order": new_order, "order_coffees": order_coffees}
 
 
 app.include_router(router_v1)
