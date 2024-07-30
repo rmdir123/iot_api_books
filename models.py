@@ -3,14 +3,16 @@ from sqlalchemy.orm import relationship
 
 from database import Base
 
-class Student(Base):
-    __tablename__ = 'students'
-
-    firstname = Column(String, index=True)
-    lastname = Column(String, index=True)
+class Book(Base):
+    __tablename__ = 'books'
     id = Column(Integer, primary_key=True, index=True)
-    dob = Column(String, index=True)
-    gender = Column(String, index=True)
+    title = Column(String, index=True)
+    author = Column(String, index=True)
+    year = Column(Integer, index=True)
+    is_published = Column(Boolean, index=True)
+    description = Column(String, index=True)
+    summary = Column(String, index=True)
+    booktype = Column(String, index=True)
 
 class Coffee(Base):
     __tablename__ = 'coffee'
